@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS countries (
     east DOUBLE PRECISION NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (south >= -90 AND north <= 90 AND south <= north),
-    CHECK (west >= -180 AND east <= 180 AND west <= east)
+    CHECK (west >= -180 AND east <= 180)
 );
 
 CREATE TABLE IF NOT EXISTS aircraft (
@@ -21,5 +21,4 @@ CREATE TABLE IF NOT EXISTS aircraft (
 );
 
 CREATE INDEX IF NOT EXISTS idx_aircraft_country_id ON aircraft(country_id);
-CREATE INDEX IF NOT EXISTS idx_aircraft_callsign_lower ON aircraft(LOWER(callsign));
 CREATE INDEX IF NOT EXISTS idx_aircraft_speed ON aircraft(speed);
