@@ -10,6 +10,6 @@ def get_database_config() -> dict:
         "host": os.getenv("DB_HOST", "localhost"),
         "port": int(os.getenv("DB_PORT", "5432")),
         "dbname": os.getenv("DB_NAME", "aircraft_tracking"),
-        "user": os.getenv("DB_USER", "postgres"),
+        "user": os.getenv("DB_USER", "dispatcher"),
         "password": os.getenv("DB_PASSWORD", ""),
     }
