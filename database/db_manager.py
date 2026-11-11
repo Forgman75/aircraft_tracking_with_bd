@@ -29,7 +29,14 @@ class DBManager:
     def initialize_schema(self, schema_path: str | Path | None = None) -> None:
         """Выполняет SQL-скрипт создания таблиц и индексов."""
         path = Path(schema_path) if schema_path else Path(__file__).with_name("schema.sql")
-        with self.connection.cursor() as cursor:
-            cursor.execute(path.read_text(encoding="utf-8"))
-        self.connection.commit()
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(path.read_text(encoding="utf-8"))
+            self.connection.commit()
+            print("Схема БД успешно инициализирована.")
+        except Exception as e:
+            # Если произошла ошибка, откатываем транзакцию, чтобы соединение не "зависло"
+            self.connection.rollback()
+            raise RuntimeError(f"Ошибка при инициализации схемы БД: {e}") from e
+
 
