@@ -40,3 +40,22 @@ class DBManager:
             raise RuntimeError(f"Ошибка при инициализации схемы БД: {e}") from e
 
 
+    def upsert_country(self, name: str, south: float, north: float,
+                       west: float, east: float) -> int:
+        """Добавляет страну или обновляет её границы; возвращает ID."""
+        sql = '''
+            INSERT INTO countries (name, south, north, west, east)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (name) DO UPDATE SET
+                south = EXCLUDED.south, north = EXCLUDED.north,
+                west = EXCLUDED.west, east = EXCLUDED.east
+            RETURNING country_id
+        '''
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, (name, south, north, west, east))
+            country_id = cursor.fetchone()[0]
+        self.connection.commit()
+        return country_id
+
+
+
