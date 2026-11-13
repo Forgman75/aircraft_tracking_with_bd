@@ -39,7 +39,6 @@ class DBManager:
             self.connection.rollback()
             raise RuntimeError(f"Ошибка при инициализации схемы БД: {e}") from e
 
-
     def upsert_country(self, name: str, south: float, north: float,
                        west: float, east: float) -> int:
         """Добавляет страну или обновляет её границы; возвращает ID."""
@@ -56,6 +55,30 @@ class DBManager:
             country_id = cursor.fetchone()[0]
         self.connection.commit()
         return country_id
+
+    def upsert_aircraft(self, country_id: int, aircraft_list: Iterable[Any]) -> int:
+        """Вставляет самолёты или обновляет их по стране и позывному."""
+        rows = []
+        for aircraft in aircraft_list:
+            callsign = str(getattr(aircraft, "callsign", "")).strip()
+            if not callsign:
+                continue
+            speed = float(getattr(aircraft, "speed", 0) or 0)
+            altitude = float(getattr(aircraft, "altitude", 0) or 0)
+            if speed >= 0 and altitude >= 0:
+                rows.append((country_id, callsign, speed, altitude))
+        if not rows:
+            return 0
+        sql = '''
+            INSERT INTO aircraft (country_id, callsign, speed, altitude) VALUES %s
+            ON CONFLICT (country_id, callsign) DO UPDATE SET
+                speed = EXCLUDED.speed, altitude = EXCLUDED.altitude,
+                last_seen = CURRENT_TIMESTAMP
+        '''
+        with self.connection.cursor() as cursor:
+            execute_values(cursor, sql, rows)
+        self.connection.commit()
+        return len(rows)
 
 
 
