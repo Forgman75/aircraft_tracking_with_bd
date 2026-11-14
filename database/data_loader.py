@@ -7,8 +7,8 @@ from database.db_manager import DBManager
 logger = logging.getLogger(__name__)
 
 COUNTRIES = (
-    "Germany", "France", "Netherlands", "Belgium", "Spain",
-    "Italy", "Austria", "Switzerland", "Poland", "Czechia",
+    "Germany", "France", "Netherlands", "Belgium", 
+    "Spain", "Italy", "Austria", "Switzerland", 
 )
 
 
