@@ -39,11 +39,19 @@ class AircraftDataLoader:
                 
                 # Преобразуем сырые данные в объекты и фильтруем пустые позывные
                 objects = Aircraft.cast_to_object_list(states)
-                normalized = [
-                    Aircraft(country=country_name, callsign=obj.callsign,
-                             speed=obj.speed, altitude=obj.altitude)
-                    for obj in objects if str(getattr(obj, "callsign", "")).strip()
-                ]
+                unique_aircraft = {}
+                for obj in objects:
+                    callsign = str(getattr(obj, "callsign", "")).strip()
+                    # Оставляем только непустые позывные и берем первое вхождение
+                    if callsign and callsign not in unique_aircraft:
+                        unique_aircraft[callsign] = Aircraft(
+                            country=country_name,
+                            callsign=callsign,
+                            speed=obj.speed,
+                            altitude=obj.altitude
+                        )
+                
+                normalized = list(unique_aircraft.values())
                 
                 # Массово сохраняем самолёты в БД
                 stats["aircraft_upserted"] += self.db_manager.upsert_aircraft(country_id, normalized)
@@ -52,5 +60,6 @@ class AircraftDataLoader:
             except Exception:
                 stats["countries_failed"] += 1
                 logger.exception(" Не удалось обработать страну: %s", country_name)
+                self.db_manager.connection.rollback()
                 
         return stats
