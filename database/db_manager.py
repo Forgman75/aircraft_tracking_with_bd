@@ -1,9 +1,14 @@
 """Репозиторий для работы с PostgreSQL."""
+import logging
 from pathlib import Path
 from typing import Any, Iterable
+from database.exceptions import SchemaInitializationError
 
 import psycopg2
 from psycopg2.extras import RealDictCursor, execute_values
+
+logger = logging.getLogger(__name__)
+
 
 
 class DBManager:
@@ -33,11 +38,15 @@ class DBManager:
             with self.connection.cursor() as cursor:
                 cursor.execute(path.read_text(encoding="utf-8"))
             self.connection.commit()
-            print("Схема БД успешно инициализирована.")
+
         except Exception as e:
             # Если произошла ошибка, откатываем транзакцию, чтобы соединение не "зависло"
             self.connection.rollback()
-            raise RuntimeError(f"Ошибка при инициализации схемы БД: {e}") from e
+            logger.error("Откат транзакции из-за ошибки в SQL-скрипте: %s", path.name)
+            
+            error_msg = f"Не удалось выполнить инициализацию схемы БД. Проверьте синтаксис SQL."
+          
+            raise SchemaInitializationError(error_msg, file_path=str(path)) from e
 
     def upsert_country(self, name: str, south: float, north: float,
                        west: float, east: float) -> int:
