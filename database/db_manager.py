@@ -112,6 +112,13 @@ class DBManager:
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(sql)
             return [dict(row) for row in cursor.fetchall()]
+
+    def get_avg_speed(self) -> float | None:
+        """Возвращает среднюю скорость или None, если таблица пуста."""
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT AVG(speed) AS avg_speed FROM aircraft")
+                row = cursor.fetchone()
+        return float(row["avg_speed"]) if row and row["avg_speed"] is not None else None
     
     def get_aircraftes_with_higher_speed(self) -> list[dict[str, Any]]:
         """Возвращает самолёты со скоростью выше средней по всей таблице."""
