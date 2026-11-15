@@ -89,7 +89,7 @@ class DBManager:
         self.connection.commit()
         return len(rows)
 
-    def get_countries_and_aeroplanes_count(self) -> list[dict[str, Any]]:
+    def get_countries_and_aircraftes_count(self) -> list[dict[str, Any]]:
         """Возвращает страны и количество самолётов, включая страны с нулём."""
         sql = '''
             SELECT c.country_id, c.name AS country,
@@ -101,7 +101,19 @@ class DBManager:
             cursor.execute(sql)
             return [dict(row) for row in cursor.fetchall()]
 
-    def get_aeroplanes_with_higher_speed(self) -> list[dict[str, Any]]:
+    def get_all_aircraftes(self) -> list[dict[str, Any]]:
+        """Возвращает все самолёты вместе со страной наблюдения."""
+        sql = '''
+            SELECT a.aircraft_id, c.name AS country, a.callsign, a.speed,
+                    a.altitude, a.last_seen
+            FROM aircraft a JOIN countries c ON c.country_id = a.country_id
+            ORDER BY c.name, a.callsign
+        '''
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(sql)
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_aircraftes_with_higher_speed(self) -> list[dict[str, Any]]:
         """Возвращает самолёты со скоростью выше средней по всей таблице."""
         sql = '''
             WITH avg_speed AS (SELECT AVG(speed) AS value FROM aircraft)
