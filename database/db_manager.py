@@ -130,7 +130,7 @@ class DBManager:
             CROSS JOIN avg_speed av
             WHERE av.value IS NOT NULL AND a.speed > av.value
             ORDER BY a.speed DESC, c.name, a.callsign
-            '''
+        '''
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(sql)
             return [dict(row) for row in cursor.fetchall()]
