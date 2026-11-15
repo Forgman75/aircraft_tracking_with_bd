@@ -89,5 +89,32 @@ class DBManager:
         self.connection.commit()
         return len(rows)
 
+    def get_countries_and_aeroplanes_count(self) -> list[dict[str, Any]]:
+        """Возвращает страны и количество самолётов, включая страны с нулём."""
+        sql = '''
+            SELECT c.country_id, c.name AS country,
+                    COUNT(a.aircraft_id)::INTEGER AS aeroplanes_count
+            FROM countries c LEFT JOIN aircraft a ON a.country_id = c.country_id
+            GROUP BY c.country_id, c.name ORDER BY c.name
+        '''
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(sql)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_aeroplanes_with_higher_speed(self) -> list[dict[str, Any]]:
+        """Возвращает самолёты со скоростью выше средней по всей таблице."""
+        sql = '''
+            WITH avg_speed AS (SELECT AVG(speed) AS value FROM aircraft)
+            SELECT a.aircraft_id, c.name AS country, a.callsign, a.speed,
+                a.altitude, a.last_seen
+            FROM aircraft a JOIN countries c ON c.country_id = a.country_id
+            CROSS JOIN avg_speed av
+            WHERE av.value IS NOT NULL AND a.speed > av.value
+            ORDER BY a.speed DESC, c.name, a.callsign
+            '''
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(sql)
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
