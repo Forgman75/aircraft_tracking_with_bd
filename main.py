@@ -6,6 +6,7 @@ from database.db_manager import DBManager
 from src.nominatim_api import NominatimAPI
 from src.opensky_api import OpenSkyAPI
 from database.data_loader import AircraftDataLoader
+from database.exceptions import DatabaseError, SchemaInitializationError
 
 
 def main() -> None:
@@ -26,10 +27,17 @@ def main() -> None:
 
     except psycopg2.OperationalError as e:
         logger.error("Ошибка подключения к БД: %s", e)
-    except RuntimeError as e:
+    except SchemaInitializationError as e:
         logger.error("Ошибка создания таблиц БД: %s", e)
+        logger.debug("Технические детали ошибки:", exc_info=True)
+    except DatabaseError as e:
+        # Сюда попадут любые другие ошибки, которые мы явно пометим как DatabaseError
+        logger.error("Ошибка работы с базой данных: %s", e)
+
     except Exception as e:
-        logger.error("Неожиданная ошибка: %s", e)
+        logger.critical("Неожиданная критическая ошибка: %s", e, exc_info=True)
+
+
 
 
 if __name__ == "__main__":
