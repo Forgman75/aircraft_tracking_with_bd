@@ -37,6 +37,9 @@ def get_menu_choice() -> str:
 
 
 def search_by_sub_callsign(db: DBManager):
+    """
+    Получает от пользователя часть позывного для поиска самолетов
+    """
     keyword = input("Часть позывного для поиска (например DLH): ").strip()
     if keyword:
         print_rows("Результат поиска", db.get_aircraftes_with_keyword(keyword))
@@ -76,6 +79,11 @@ def handle_menu_choice(
 
 
 def run_interactive_client(db: DBManager):
+    """
+    Функция выводит в цикле меню, получает выбор пользователя
+    и вызывает соответствующий метод DBManager-а или завершает
+    выполнение программы
+    """
 
     while True:
         show_menu()
