@@ -32,6 +32,34 @@ class DBManager:
         if self.connection and not self.connection.closed:
             self.connection.close()
 
+    def schema_exists(self) -> bool:
+        """
+        Проверяет, существуют ли ключевые таблицы схемы в базе данных.
+        Возвращает True, если все обязательные таблицы уже созданы.
+        """
+        required_tables = {"countries", "aircraft"}
+        
+        try:
+            with self.connection.cursor() as cursor:
+                # Запрашиваем information_schema — системный каталог PostgreSQL
+                cursor.execute(
+                    """
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                      AND table_name = ANY(%s)
+                    """,
+                    (list(required_tables),)
+                )
+                existing_tables = {row[0] for row in cursor.fetchall()}
+                
+                # Проверяем, что все обязательные таблицы присутствуют
+                return required_tables <= existing_tables
+                
+        except psycopg2.Error as e:
+            logger.error("Ошибка при проверке существования схемы: %s", e)
+            return False
+
     def initialize_schema(self, schema_path: str | Path | None = None) -> None:
         """Выполняет SQL-скрипт создания таблиц и индексов."""
         path = (
